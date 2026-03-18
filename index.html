@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#AC03B0">
+    <meta name="description" content="ChromeLogix Pallet Dimensions Tracker">
+    <title>ChromeLogix Pallet Dims</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkNocm9tZUxvZ2l4IFBhbGxldCBEaW1zIiwKICAic2hvcnRfbmFtZSI6ICJDbHR4IFBhbGxldCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI0FDMDNCMCIsCiAgInRoZW1lX2NvbG9yIjogIiNBQzAzQjAiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZT64oy3/WyI+s+LDqS5jb21tZW50KSwKICAgICAgInNpemVzIjogWyIxMDIiLCAiMTAyIl0KICAgIH1KICBdCn0=">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Good+Time&display=swap" rel="stylesheet">
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #AC03B0;
+            --primary-dark: #8a0294;
+            --accent: #F37609;
+            --accent-light: #ff9a3d;
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --text-light: #ffffff;
+            --text-dark: #1a1a2e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Good Time', cursive, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(160, 3, 176, 0.4);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        header h1 {
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        header .truck {
+            font-size: 2rem;
+        }
+        
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            flex-wrap: wrap;
+        }
+        
+        nav button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-light);
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        nav button.active {
+            background: var(--accent);
+            color: var(--text-dark);
+        }
+        
+        /* Main Content */
+        main {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-light);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn-accent {
+            background: var(--accent);
+            color: var(--text-dark);
+        }
+        
+        .btn-accent:hover {
+            background: var(--accent-light);
+        }
+        
+        /* Order List */
+        .order-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .order-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .order-po {
+            font-size: 1.2rem;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .order-commodity {
+            background: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .order-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        
+        /* Totals */
+        .totals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .total-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .total-card.accent {
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            color: var(--text-dark);
+        }
+        
+        .total-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .total-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-card);
+            padding: 15px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            font-size: 0.8rem;
+        }
+        
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        /* Camera/Scanner */
+        #camera-container, #scanner-container {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        
+        #camera-container video, #scanner-container video {
+            width: 100%;
+            border-radius: 12px;
+        }
+        
+        #camera-container.active, #scanner-container.active {
+            display: block;
+        }
+        
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        /* Photo Preview */
+        #photo-preview {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 12px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        /* Barcode Display */
+        #barcode-display {
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        #barcode-display img {
+            max-width: 100%;
+        }
+        
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.4rem;
+            }
+            
+            .row {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            nav button {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Desktop Table View */
+        @media (min-width: 768px) {
+            main {
+                padding: 30px;
+            }
+            
+            .card {
+                padding: 30px;
+            }
+            
+            .form-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+            
+            .order-details {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: var(--text-dark);
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><span class="truck">🚛</span> ChromeLogix Pallet Dims</h1>
+    </header>
+    
+    <nav>
+        <button class="active" onclick="showSection('new')">📦 New Order</button>
+        <button onclick="showSection('list')">📋 Orders</button>
+        <button onclick="showSection('totals')">📊 Totals</button>
+    </nav>
+    
+    <main>
+        <!-- New Order Section -->
+        <section id="new-order" class="section active">
+            <div class="card">
+                <h2>Add Pallet</h2>
+                <form id="pallet-form">
+                    <div class="form-group">
+                        <label>PO Number</label>
+                        <input type="text" id="po" placeholder="Enter PO" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Commodity Type</label>
+                        <select id="commodity" required>
+                            <option value="">Select type...</option>
+                            <option value="rolls">Rolls</option>
+                            <option value="boxes">Boxes</option>
+                            <option value="pipe">Pipe</option>
+                            <option value="hvac">HVAC</option>
+                            <option value="steel">Steel</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    
+                    <div class="row form-group">
+                        <div>
+                            <label>Length (in)</label>
+                            <input type="number" id="length" placeholder="L" required min="1">
+                        </div>
+                        <div>
+                            <label>Width (in)</label>
+                            <input type="number" id="width" placeholder="W" required min="1">
+                        </div>
+                        <div>
+                            <label>Height (in)</label>
+                            <input type="number" id="height" placeholder="H" required min="1">
+                        </div>
+                    </div>
+                    
+                    <div class="row form-group">
+                        <div>
+                            <label>Weight (lbs)</label>
+                            <input type="number" id="weight" placeholder="Wt" required min="1">
+                        </div>
+                        <div>
+                            <label>Quantity</label>
+                            <input type="number" id="qty" value="1" required min="1">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes / PO</label>
+                        <textarea id="notes" rows="2" placeholder="Additional notes..."></textarea>
+                    </div>
+                    
+                    <!-- Photo Capture -->
+                    <div class="form-group">
+                        <label>Photo (optional)</label>
+                        <button type="button" class="btn btn-accent" onclick="openCamera()">📷 Take Photo</button>
+                        <div id="camera-container">
+                            <video id="camera" autoplay playsinline></video>
+                            <div class="camera-controls">
+                                <button type="button" class="btn btn-primary" onclick="takePhoto()">Capture</button>
+                                <button type="button" class="btn" onclick="closeCamera()">Cancel</button>
+                            </div>
+                        </div>
+                        <img id="photo-preview" alt="Photo preview">
+                    </div>
+                    
+                    <!-- Barcode -->
+                    <div class="form-group">
+                        <label>Barcode Scan</label>
+                        <button type="button" class="btn btn-accent" onclick="openScanner()">📱 Scan Barcode</button>
+                        <div id="scanner-container">
+                            <div id="scanner-viewport"></div>
+                            <button type="button" class="btn" onclick="closeScanner()">Cancel</button>
+                        </div>
+                        <div id="barcode-display">
+                            <img id="barcode-img" alt="Barcode">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">➕ Add Pallet</button>
+                </form>
+            </div>
+        </section>
+        
+        <!-- Orders List Section -->
+        <section id="orders-list" class="section">
+            <div class="card">
+                <h2>Orders</h2>
+                <div id="orders-container">
+                    <div class="empty-state">
+                        <div class="icon">📦</div>
+                        <p>No orders yet. Add your first pallet!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Totals Section -->
+        <section id="totals-section" class="section">
+            <div class="card">
+                <h2>Shipment Totals</h2>
+                <div class="totals-grid">
+                    <div class="total-card">
+                        <div class="total-value" id="total-pallets">0</div>
+                        <div class="total-label">Total Pallets</div>
+                    </div>
+                    <div class="total-card">
+                        <div class="total-value" id="total-volume">0</div>
+                        <div class="total-label">Cu. Ft.</div>
+                    </div>
+                    <div class="total-card">
+                        <div class="total-value" id="total-weight">0</div>
+                        <div class="total-label">Lbs</div>
+                    </div>
+                    <div class="total-card accent">
+                        <div class="total-value" id="truck-percent">0%</div>
+                        <div class="total-label">24ft Box Truck</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="exportCSV()">📄 Export CSV</button>
+                    <button class="btn btn-accent" onclick="exportPDF()">📧 Email PDF</button>
+                    <button class="btn" onclick="clearAll()">🗑️ Clear All</button>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>ChromeLogix - Indy's Carrier Marketplace</p>
+    </footer>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // ==================== DATA ====================
+        let orders = JSON.parse(localStorage.getItem('chromelogix_orders') || '[]');
+        let currentPhoto = null;
+        
+        // ==================== NAVIGATION ====================
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            
+            if (section === 'new') {
+                document.getElementById('new-order').classList.add('active');
+                document.querySelector('nav button:nth-child(1)').classList.add('active');
+            } else if (section === 'list') {
+                document.getElementById('orders-list').classList.add('active');
+                document.querySelector('nav button:nth-child(2)').classList.add('active');
+                renderOrders();
+            } else if (section === 'totals') {
+                document.getElementById('totals-section').classList.add('active');
+                document.querySelector('nav button:nth-child(3)').classList.add('active');
+                calculateTotals();
+            }
+        }
+        
+        // ==================== FORM ====================
+        document.getElementById('pallet-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const order = {
+                id: Date.now(),
+                po: document.getElementById('po').value,
+                commodity: document.getElementById('commodity').value,
+                length: parseFloat(document.getElementById('length').value),
+                width: parseFloat(document.getElementById('width').value),
+                height: parseFloat(document.getElementById('height').value),
+                weight: parseFloat(document.getElementById('weight').value),
+                qty: parseInt(document.getElementById('qty').value),
+                notes: document.getElementById('notes').value,
+                photo: currentPhoto,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Calculate metrics
+            order.volumeCuFt = (order.length * order.width * order.height / 1728) * order.qty;
+            order.pallets48x40 = order.qty;
+            
+            orders.push(order);
+            saveOrders();
+            
+            // Reset form
+            this.reset();
+            currentPhoto = null;
+            document.getElementById('photo-preview').style.display = 'none';
+            document.getElementById('barcode-display').style.display = 'none';
+            
+            showToast('Pallet added successfully!');
+        });
+        
+        function saveOrders() {
+            localStorage.setItem('chromelogix_orders', JSON.stringify(orders));
+        }
+        
+        // ==================== ORDERS LIST ====================
+        function renderOrders() {
+            const container = document.getElementById('orders-container');
+            
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📦</div>
+                        <p>No orders yet. Add your first pallet!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = orders.map(order => `
+                <div class="order-item" onclick="deleteOrder(${order.id})">
+                    <div class="order-header">
+                        <span class="order-po">${order.po}</span>
+                        <span class="order-commodity">${order.commodity}</span>
+                    </div>
+                    <div class="order-details">
+                        <div>L: ${order.length}" W: ${order.width}" H: ${order.height}"</div>
+                        <div>${order.weight} lbs × ${order.qty}</div>
+                        <div>${order.volumeCuFt.toFixed(1)} cu ft</div>
+                        <div>${order.notes || 'No notes'}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function deleteOrder(id) {
+            if (confirm('Delete this order?')) {
+                orders = orders.filter(o => o.id !== id);
+                saveOrders();
+                renderOrders();
+                showToast('Order deleted');
+            }
+        }
+        
+        // ==================== TOTALS ====================
+        function calculateTotals() {
+            const totalPallets = orders.reduce((sum, o) => sum + o.qty, 0);
+            const totalVolume = orders.reduce((sum, o) => sum + (o.volumeCuFt || 0), 0);
+            const totalWeight = orders.reduce((sum, o) => sum + (o.weight * o.qty), 0);
+            
+            // 24ft box truck = ~1,500 cu ft
+            const truckPercent = Math.min(100, (totalVolume / 1500) * 100);
+            
+            document.getElementById('total-pallets').textContent = totalPallets;
+            document.getElementById('total-volume').textContent = totalVolume.toFixed(1);
+            document.getElementById('total-weight').textContent = totalWeight.toLocaleString();
+            document.getElementById('truck-percent').textContent = truckPercent.toFixed(0) + '%';
+        }
+        
+        // ==================== CAMERA ====================
+        let cameraStream = null;
+        
+        async function openCamera() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                document.getElementById('camera').srcObject = cameraStream;
+                document.getElementById('camera-container').classList.add('active');
+            } catch (err) {
+                showToast('Camera access denied');
+            }
+        }
+        
+        function takePhoto() {
+            const video = document.getElementById('camera');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            currentPhoto = canvas.toDataURL('image/jpeg');
+            
+            document.getElementById('photo-preview').src = currentPhoto;
+            document.getElementById('photo-preview').style.display = 'block';
+            closeCamera();
+            showToast('Photo captured!');
+        }
+        
+        function closeCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            document.getElementById('camera-container').classList.remove('active');
+        }
+        
+        // ==================== BARCODE SCANNER ====================
+        function openScanner() {
+            document.getElementById('scanner-container').classList.add('active');
+            
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#scanner-viewport'),
+                    constraints: {
+                        facingMode: "environment"
+                    }
+                },
+                decoder: {
+                    readers: ["code_128_reader", "ean_reader", "upc_reader"]
+                }
+            }, function(err) {
+                if (err) {
+                    showToast('Scanner error: ' + err);
+                    return;
+                }
+                Quagga.start();
+            });
+            
+            Quagga.onDetected(function(result) {
+                const code = result.codeResult.code;
+                document.getElementById('po').value = code;
+                closeScanner();
+                generateBarcode(code);
+                showToast('Barcode scanned: ' + code);
+            });
+        }
+        
+        function closeScanner() {
+            Quagga.stop();
+            document.getElementById('scanner-container').classList.remove('active');
+        }
+        
+        function generateBarcode(code) {
+            const img = document.getElementById('barcode-img');
+            JsBarcode(img, code, {
+                format: "CODE128",
+                width: 2,
+                height: 80,
+                displayValue: true
+            });
+            document.getElementById('barcode-display').style.display = 'block';
+        }
+        
+        // ==================== EXPORT ====================
+        function exportCSV() {
+            if (orders.length === 0) {
+                showToast('No orders to export');
+                return;
+            }
+            
+            let csv = 'PO,Commodity,L,W,H,Weight,Qty,Volume CuFt,Notes\n';
+            orders.forEach(o => {
+                csv += `${o.po},${o.commodity},${o.length},${o.width},${o.height},${o.weight},${o.qty},${o.volumeCuFt.toFixed(2)},${o.notes || ''}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'chromelogix-orders.csv';
+            a.click();
+            
+            showToast('CSV exported!');
+        }
+        
+        function exportPDF() {
+            if (orders.length === 0) {
+                showToast('No orders to export');
+                return;
+            }
+            
+            const calculateTotals = () => {
+                const totalPallets = orders.reduce((sum, o) => sum + o.qty, 0);
+                const totalVolume = orders.reduce((sum, o) => sum + (o.volumeCuFt || 0), 0);
+                const totalWeight = orders.reduce((sum, o) => sum + (o.weight * o.qty), 0);
+                return { totalPallets, totalVolume, totalWeight };
+            };
+            
+            const totals = calculateTotals();
+            
+            const html = `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h1 style="color: #AC03B0;">🚛 ChromeLogix Pallet Dims</h1>
+                    <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                    
+                    <h2>Orders</h2>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="background: #AC03B0; color: white;">
+                            <th style="padding: 10px; text-align: left;">PO</th>
+                            <th style="padding: 10px;">Type</th>
+                            <th style="padding: 10px;">L×W×H</th>
+                            <th style="padding: 10px;">Wt</th>
+                            <th style="padding: 10px;">Qty</th>
+                            <th style="padding: 10px;">CuFt</th>
+                        </tr>
+                        ${orders.map(o => `
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">${o.po}</td>
+                                <td style="padding: 10px;">${o.commodity}</td>
+                                <td style="padding: 10px;">${o.length}×${o.width}×${o.height}</td>
+                                <td style="padding: 10px;">${o.weight}</td>
+                                <td style="padding: 10px;">${o.qty}</td>
+                                <td style="padding: 10px;">${o.volumeCuFt.toFixed(1)}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #f5f5f5;">
+                        <h3>Totals</h3>
+                        <p><strong>Total Pallets:</strong> ${totals.totalPallets}</p>
+                        <p><strong>Total Volume:</strong> ${totals.totalVolume.toFixed(1)} cu ft</p>
+                        <p><strong>Total Weight:</strong> ${totals.totalWeight.toLocaleString()} lbs</p>
+                    </div>
+                </div>
+            `;
+            
+            html2pdf().set({ margin: 10, filename: 'chromelogix-orders.pdf' }).from(html).save();
+            showToast('PDF generated!');
+            
+            // Email link
+            setTimeout(() => {
+                const subject = 'ChromeLogix Pallet Orders - ' + new Date().toLocaleDateString();
+                const body = 'Please find attached the pallet dimensions report.';
+                window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            }, 2000);
+        }
+        
+        function clearAll() {
+            if (confirm('Clear all orders?')) {
+                orders = [];
+                saveOrders();
+                renderOrders();
+                calculateTotals();
+                showToast('All orders cleared');
+            }
+        }
+        
+        // ==================== UTILITIES ====================
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // ==================== SERVICE WORKER ====================
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'chromelogix-pwa-v1';
+                const urlsToCache = ['/'];
+                
+                self.addEventListener('install', event => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME)
+                            .then(cache => cache.addAll(urlsToCache))
+                    );
+                });
+                
+                self.addEventListener('fetch', event => {
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then(response => response || fetch(event.request))
+                    );
+                });
+            `;
+            
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            
+            navigator.serviceWorker.register(swUrl).catch(err => {
+                console.log('SW registration failed:', err);
+            });
+        }
+        
+        // ==================== INIT ====================
+        // Load saved orders
+        renderOrders();
+    </script>
+</body>
+</html>
